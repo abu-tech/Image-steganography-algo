@@ -29,6 +29,81 @@ def decode(hexcode):
     else:
         return None
 
+def chaotic_sequence(x0, y0, a, b, length):
+    """
+    Generates a chaotic sequence using the given chaotic function.
+
+    Args:
+    - x0 (float): Initial value for x.
+    - y0 (float): Initial value for y.
+    - a (float): Chaotic function parameter.
+    - b (float): Chaotic function parameter.
+    - length (int): Length of the sequence to generate.
+
+    Returns:
+    - list: List containing the generated chaotic sequence.
+    """
+    x_values = [x0]
+    y_values = [y0]
+
+    for _ in range(length):
+        x_next = 1 - a * x_values[-1]**2 + y_values[-1]
+        y_next = b * y_values[-1]
+        x_values.append(x_next)
+        y_values.append(y_next)
+
+    return x_values[1:], y_values[1:]  # exclude initial values
+
+def xor_with_chaotic(message, x_sequence, y_sequence):
+    """
+    XORs each bit of the binary message with the corresponding chaotic sequence values.
+
+    Args:
+    - message (str): Binary message to be XORed.
+    - x_sequence (list): Chaotic sequence for x.
+    - y_sequence (list): Chaotic sequence for y.
+
+    Returns:
+    - str: Binary message XORed with the chaotic sequence.
+    """
+    chaotic_sequence_length = min(len(x_sequence), len(y_sequence))
+    chaotic_sequence = [(x, y) for x, y in zip(x_sequence[:chaotic_sequence_length], y_sequence[:chaotic_sequence_length])]
+    
+    binary_message = [int(bit) for bit in message]
+    binary_result = []
+
+    for bit, (x, y) in zip(binary_message, chaotic_sequence):
+        chaotic_bit = int((x + y) * 1000) % 2  # convert chaotic value to 0 or 1
+        xor_result = bit ^ chaotic_bit
+        binary_result.append(str(xor_result))
+
+    return ''.join(binary_result)
+
+def retrieve_from_xor(x_sequence, y_sequence, xor_result):
+    """
+    Retrieves the original binary message from the XOR result with the chaotic sequence.
+
+    Args:
+    - x_sequence (list): Chaotic sequence for x.
+    - y_sequence (list): Chaotic sequence for y.
+    - xor_result (str): XOR result of the binary message with the chaotic sequence.
+
+    Returns:
+    - str: Original binary message.
+    """
+    chaotic_sequence_length = min(len(x_sequence), len(y_sequence))
+    chaotic_sequence = [(x, y) for x, y in zip(x_sequence[:chaotic_sequence_length], y_sequence[:chaotic_sequence_length])]
+
+    binary_result = [int(bit) for bit in xor_result]
+    binary_message = []
+
+    for bit, (x, y) in zip(binary_result, chaotic_sequence):
+        chaotic_bit = int((x + y) * 1000) % 2  # convert chaotic value to 0 or 1
+        original_bit = bit ^ chaotic_bit
+        binary_message.append(str(original_bit))
+
+    return ''.join(binary_message)
+
 def hide(filename,message):
     img = Image.open(filename)
     binary = str2bin(message).encode() + b'1111111111111110'
